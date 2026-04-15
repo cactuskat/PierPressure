@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>PierPressure | Dashboard</title>
+<style>
+        /* Specific styles for the loading state */
+        .loading-container {
+            text-align: center;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid var(--wave);
+            border-top: 6px solid var(--deep);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-family: var(--display);
+            color: var(--deep);
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+
+        .sub-text {
+            color: var(--ink-lt);
+            font-weight: 600;
+            margin-top: 8px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div id="app">
+    <header>
+        <div class="logo">
+            <span class="logo-boat">🚢</span> Battleship!
+        </div>
+    </header>
+
+    <div id="main">
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <div class="loading-text">Preparing the Fleet...</div>
+            <p class="sub-text">Scouting enemy waters. Please wait.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Logic for transitioning can be added here later
+    // For now, it just sits pretty!
+    console.log("Dashboard loading page active.");
+</script>
+{% endblock %}

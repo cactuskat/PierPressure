@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime
+from flask import jsonify
 
 db = SQLAlchemy()
 
@@ -21,7 +22,7 @@ class Player(db.Model):
     total_shots = db.Column(db.Integer, default=0)
     total_hits = db.Column(db.Integer, default=0)
 
-    participations = db.relationship('GameParticipation', backref='player', lazy=True)
+    matchs = db.relationship('GamePlayer', backref='player', lazy=True)
     ships = db.relationship('Ship', backref='player', lazy=True)
     moves = db.relationship('Move', backref='player', lazy=True)
 
@@ -43,24 +44,25 @@ class Player(db.Model):
             "accuracy": self.accuracy,
         }
 
-class GameParticipation(db.Model):
-    __tablename__ = 'game_participation'
+class GamePlayer(db.Model):
+    __tablename__ = 'game_player'
     
-    game_id = db.Column(UUID(as_uuid=True), db.ForeignKey('games.id'), primary_key=True)
+    game_id = db.Column(UUID(as_uuid=True), db.ForeignKey('game.game_id'), primary_key=True)
     player_id = db.Column(UUID(as_uuid=True), db.ForeignKey('players.player_id'), primary_key=True)
     turn_order = db.Column(db.Integer, nullable=False, default=0)
 
     joined_at = db.Column(db.DateTime, default=datetime.now())
     is_eliminated = db.Column(db.Boolean, default=False)
 
-class GameMatch(db.Model):
-    __tablename__ = 'game_match'
+class Game(db.Model):
+    __tablename__ = 'game'
 
     game_id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    code = db.Column(db.String(4), unique=True, nullable=False)
     creator_id = db.Column(UUID(as_uuid=True),db.ForeignKey('players.player_id'),nullable=False)
     grid_size = db.Column(db.Integer, nullable=False, default=5)
     max_players = db.Column(db.Integer, nullable=False, default=1)
-    created_at = db.Column(db.DateTime, default=datetime.now())
+    created_at = db.Column(db.DateTime, default=datetime.now)
     
     game_status = db.Column(db.String(20), nullable=False, default='waiting') #'waiting','active', or 'finished'
     current_turn_index = db.Column(db.Integer, default=0)
@@ -68,7 +70,7 @@ class GameMatch(db.Model):
 
     winner_id = db.Column(UUID(as_uuid=True),db.ForeignKey('players.player_id'),nullable=True,default=None)
    
-    participations = db.relationship('GameParticipation', backref='game', lazy=True)
+    matches = db.relationship('GamePlayer', backref='game', lazy=True)
     ships = db.relationship('Ship', backref='game', lazy=True)
     moves = db.relationship('Move', backref='game', lazy=True, order_by='Move.created_at')
 
@@ -96,7 +98,7 @@ class Ship(db.Model):
  
     game_id = db.Column(
         UUID(as_uuid=True),
-        db.ForeignKey('games.game_id'),
+        db.ForeignKey('game.game_id'),
         nullable=False
     )
     player_id = db.Column(
@@ -111,7 +113,7 @@ class Ship(db.Model):
     # True once this cell has been hit by an opponent
     is_hit = db.Column(db.Boolean, default=False)
  
-    placed_at = db.Column(db.DateTime, default=datetime.utcnow)
+    placed_at = db.Column(db.DateTime, default=datetime.now)
  
     # Prevent duplicate coordinates within the same game
     __table_args__ = (
@@ -137,7 +139,7 @@ class Move(db.Model):
  
     game_id = db.Column(
         UUID(as_uuid=True),
-        db.ForeignKey('games.game_id'),
+        db.ForeignKey('game.game_id'),
         nullable=False
     )
     player_id = db.Column(
@@ -152,7 +154,7 @@ class Move(db.Model):
     # 'hit' or 'miss'
     hit = db.Column(db.Boolean, default=False)
  
-    created_at = db.Column(db.DateTime, default=datetime.now())
+    created_at = db.Column(db.DateTime, default=datetime.now)
  
     def to_dict(self):
         """Serializes a single move for GET /api/games/{id}/moves."""
